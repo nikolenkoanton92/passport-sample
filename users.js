@@ -19,6 +19,6 @@ exports.findById = function(id, cb) {
   if (user.id === id) {
     cb(null, user.id);
   } else {
-    cb(err)
+    cb(err);
   }
 };

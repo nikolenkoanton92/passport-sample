@@ -5,8 +5,8 @@ var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 
-var routes = require('./routes/index');
-var users = require('./routes/users');
+// var routes = require('./routes/index');
+// var users = require('./routes/users');
 
 var User = require('./users');
 
@@ -31,10 +31,7 @@ passport.use(new LocalStrategy({
 
   function(username, password, done) {
     User.findByUsername(username, function(err, user) {
-      console.log(err);
-      console.log(user);
       if (err) {
-        console.log(err);
         return done(err);
       }
       if (!user) {
@@ -42,7 +39,6 @@ passport.use(new LocalStrategy({
           message: 'Incorrect username'
         });
       }
-
       if (user.password !== password) {
         return done(null, false, {
           message: 'Incorrect password.'
@@ -72,24 +68,49 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(cookieParser());
 app.use(session({
-  secret: 'anton'
+  secret: 'anton',
+  resave: false,
+  saveUninitialized: false
 }));
 
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
-app.use('/users', users);
+// app.use('/', routes);
+// app.use('/users', users);
+
+
+app.get('/login', function(req, res) {
+  res.render('login', {
+    title: 'Express'
+  });
+});
 
 app.post('/login',
   passport.authenticate('local', {
+    successRedirect: '/',
     failureRedirect: '/login',
-    failureFlash: true
-  }),
-  function(req, res) {
-    res.redirect('/');
-  });
+    failureFlash: false
+  })
+);
+
+app.get('/', function(req, res) {
+  if (req.user === undefined) {
+    res.redirect('/login');
+  } else {
+    res.render('index', {
+      title: 'Express'
+    });
+  }
+});
+
+app.get('/logout', function(req, res) {
+  req.logout();
+  res.redirect('/login');
+});
+// res.redirect('/');
+// });
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
